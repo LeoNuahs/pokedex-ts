@@ -1,5 +1,5 @@
 import { createInterface } from "readline";
-import { getCommands } from "./command.js";
+import { getCommands } from "./commands.js";
 
 export function startREPL() {
     const rl = createInterface({
