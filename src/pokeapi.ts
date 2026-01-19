@@ -1,9 +1,30 @@
-import { object, string, number, InferType, mixed, array } from "yup";
+import { object, string, number, InferType, mixed, array, ValidationError } from "yup";
 
 export class PokeAPI {
     private static readonly baseURL = "https://pokeapi.co/api/v2";
 
     constructor() {}
+
+    private async processResponse<T>(schema: any, response: Response): Promise<T> {
+        if (!response.ok) {
+            throw new Error(`Network error: ${response.status} ${response.statusText}`);
+        }
+
+        try {
+            const body = await response.json();
+            return await schema.validate(body, { stripUnknown: true }) as T;
+        } catch (error) {
+            if (error instanceof ValidationError) {
+                throw new Error(`Error validating data: ${error.message}`);
+            }
+
+            if (error instanceof Error) {
+                throw new Error(`Error parsing data: ${error.message}`);
+            }
+
+            throw error;
+        }
+    }
 
     async fetchLocations(pageURL?: string): Promise<ShallowLocations> {
         const url = pageURL || `${PokeAPI.baseURL}/location-area/?offset=0&limit=20`;
@@ -13,16 +34,7 @@ export class PokeAPI {
             mode: "cors",
         });
 
-        if (!response.ok) {
-            throw new Error(`Network error: ${response.status} ${response.statusText}`);
-        }
-
-        try {
-            const body = await response.json();
-            return await ShallowLocationsSchema.validate(body, { stripUnknown: true });
-        } catch (error) {
-            throw new Error(`Error parsing data: ${error}`);
-        }
+        return this.processResponse<ShallowLocations>(ShallowLocationsSchema, response);
     }
 
     async fetchLocation(locationName: string): Promise<Location> {
@@ -37,16 +49,7 @@ export class PokeAPI {
             mode: "cors",
         });
 
-        if (!response.ok) {
-            throw new Error(`Network error: ${response.status} ${response.statusText}`);
-        }
-
-        try {
-            const body = await response.json();
-            return await LocationSchema.validate(body, { stripUnknown: true });
-        } catch (error) {
-            throw new Error(`Error parsing data: ${error}`)
-        }
+        return this.processResponse<Location>(LocationSchema, response);
     }
 }
 
