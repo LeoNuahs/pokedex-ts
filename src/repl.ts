@@ -1,8 +1,6 @@
-import { initState } from "./state.js";
+import { State } from "./state.js";
 
-export function startREPL() {
-    const state = initState();
-
+export async function startREPL(state: State) {
     state.rl.prompt();
 
     state.rl.on("line", async (user_input) => {
@@ -24,7 +22,7 @@ export function startREPL() {
         }
 
         try {
-            cmd.callback(state);
+            await cmd.callback(state);
         } catch (error) {
             console.log(error);
         }
