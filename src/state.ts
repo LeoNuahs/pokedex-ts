@@ -16,7 +16,7 @@ export type State = {
     prevLocationsURL: string;
 };
 
-export function initState() {
+export function initState(millis: number) {
     const state: State = {
         rl: createInterface({
             input: process.stdin,
@@ -24,7 +24,7 @@ export function initState() {
             prompt: "Pokedex > "
         }),
         cmds: getCommands(),
-        pokeapi: new PokeAPI(),
+        pokeapi: new PokeAPI(millis),
         nextLocationsURL: "https://pokeapi.co/api/v2/location-area/?offset=0&limit=20",
         prevLocationsURL: "",
     }

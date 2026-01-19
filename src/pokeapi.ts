@@ -1,11 +1,15 @@
 import { object, string, number, InferType, mixed, array, ValidationError } from "yup";
+import { Cache } from "./pokecache.js";
 
 export class PokeAPI {
     private static readonly baseURL = "https://pokeapi.co/api/v2";
+    private cache: Cache;
 
-    constructor() {}
+    constructor(cacheInterval: number) {
+        this.cache = new Cache(cacheInterval);
+    }
 
-    private async processResponse<T>(schema: any, response: Response): Promise<T> {
+    private async processApiResponse<T>(schema: any, response: Response): Promise<T> {
         if (!response.ok) {
             throw new Error(`Network error: ${response.status} ${response.statusText}`);
         }
@@ -28,20 +32,31 @@ export class PokeAPI {
 
     async fetchLocations(pageURL?: string): Promise<ShallowLocations> {
         const url = pageURL || `${PokeAPI.baseURL}/location-area/?offset=0&limit=20`;
+        const cachedData = this.cache.get<ShallowLocations>(url);
+        if (cachedData) {
+            return cachedData;
+        }
 
         const response = await fetch(url, {
             method: "GET",
             mode: "cors",
         });
 
-        return this.processResponse<ShallowLocations>(ShallowLocationsSchema, response);
+        const data = await this.processApiResponse<ShallowLocations>(ShallowLocationsSchema, response);
+        this.cache.add(url, data);
+        return data;
     }
 
     async fetchLocation(locationName: string): Promise<Location> {
         const trimmedName = locationName.trim();
-
         if (!trimmedName) {
             throw new Error(`Location name can't be empty!`);
+        }
+
+        const url = `${PokeAPI.baseURL}/location-area/${locationName}?offset=0&limit=20`;
+        const cachedData = this.cache.get(url);
+        if (cachedData) {
+            return cachedData;
         }
 
         const response = await fetch(`${PokeAPI.baseURL}/location-area/${trimmedName}/`, {
@@ -49,7 +64,9 @@ export class PokeAPI {
             mode: "cors",
         });
 
-        return this.processResponse<Location>(LocationSchema, response);
+        const data = await this.processApiResponse<Location>(LocationSchema, response);
+        this.cache.add(url, data);
+        return data;
     }
 }
 
