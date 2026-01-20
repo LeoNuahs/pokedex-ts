@@ -1,6 +1,6 @@
 import { createInterface, type Interface } from "readline";
 import { getCommands } from "./commands.js"
-import { PokeAPI } from "./pokeapi.js";
+import { PokeAPI, Pokemon } from "./pokeapi.js";
 
 export type CLICommand = {
     name: string;
@@ -14,6 +14,7 @@ export type State = {
     pokeapi: PokeAPI;
     nextLocationsURL: string;
     prevLocationsURL: string;
+    caught: Record<string, Pokemon>;
 };
 
 export function initState(millis: number) {
@@ -27,6 +28,7 @@ export function initState(millis: number) {
         pokeapi: new PokeAPI(millis),
         nextLocationsURL: "https://pokeapi.co/api/v2/location-area/?offset=0&limit=20",
         prevLocationsURL: "",
+        caught: {},
     }
 
     return state;
