@@ -9,6 +9,10 @@ export class PokeAPI {
         this.cache = new Cache(cacheInterval);
     }
 
+    closeCache() {
+        this.cache.stopReapLoop();
+    }
+
     private async processApiResponse<T>(schema: any, response: Response): Promise<T> {
         if (!response.ok) {
             throw new Error(`Network error: ${response.status} ${response.statusText}`);
